@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-
 import { model, Schema } from 'mongoose';
+import { isValidMID } from '../id_manager';
 
 // create schema and model
 const managerSchema: Schema = new Schema({
-    id: {type: Number, required: true},
+    mid: {type: String, required: true, unique: true},
     name: {type: String, required: true},
     permissions: {type: String, required: true, default: 'READ-ONLY'}
 });
@@ -23,20 +23,21 @@ const getManagers = async (req: Request, res: Response, next: NextFunction) => {
 
 // create a new manager
 const addManager = async (req: Request, res: Response, next: NextFunction) => {
-    let id: number = parseInt(req.body.id, 10);
+    let mid: string = req.body.mid;
     let name: string = req.body.name ?? null;
     let permissions: string = req.body.permissions ?? null;
     
-    // check that id is valid an that name and permissions are non-null
-    if (isNaN(id) || name === null || permissions === null) {
+    // check that mid is valid an that name and permissions are non-null
+    if (isValidMID(mid) || name === null || permissions === null) {
         return res.status(400).json({
-            message: 'Invalid request'
+            message: 'Invalid request',
+            mid: mid
         });
     }
 
     // create a new manager
     const manager = new Manager({
-        id: id,
+        mid: mid,
         name: name,
         permissions: permissions
     });
@@ -45,7 +46,7 @@ const addManager = async (req: Request, res: Response, next: NextFunction) => {
     await manager.save();
 
     // return response
-    return res.status(200).json({
+    return res.status(201).json({
         message: manager
     });
 }
@@ -53,11 +54,11 @@ const addManager = async (req: Request, res: Response, next: NextFunction) => {
 // get a specific manager
 const getManager = async (req: Request, res: Response, next: NextFunction) => {
     // read manager id from request
-    let id: number = parseInt(req.params.id, 10);
+    let mid: string = req.params.mid;
 
     // query mongodb
     const manager = await Manager.findOne(
-        { id: id }
+        { mid: mid }
     );
 
     // return response
@@ -70,7 +71,7 @@ const getManager = async (req: Request, res: Response, next: NextFunction) => {
 // update an existing manager
 const updateManager = async (req: Request, res: Response, next: NextFunction) => {
     // read manager id from request
-    let id: number = parseInt(req.params.id, 10);
+    let mid: string = req.params.mid;
 
     // read manager name from request if exists
     let name: string = req.body.name ?? null;
@@ -79,7 +80,7 @@ const updateManager = async (req: Request, res: Response, next: NextFunction) =>
 
     // query mongodb
     const manager = await Manager.findOneAndUpdate(
-        { id: id },
+        { mid: mid },
         {
             ...(name && { name }),
             ...(permissions && { permissions })
@@ -96,11 +97,11 @@ const updateManager = async (req: Request, res: Response, next: NextFunction) =>
 // delete an existing manager
 const deleteManager = async (req: Request, res: Response, next: NextFunction) => {
     // read manager id from request
-    let id: number = parseInt(req.params.id, 10);
+    let mid: string = req.params.mid;
 
     // query mongodb
     const manager = await Manager.findOneAndDelete(
-        { id: id }
+        { mid: mid }
     );
 
     // return response

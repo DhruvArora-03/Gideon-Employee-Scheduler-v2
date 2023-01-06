@@ -1,12 +1,13 @@
-import { Request, Response, NextFunction } from 'express';
+import e, { Request, Response, NextFunction } from 'express';
 import { model, Schema } from 'mongoose';
-import axios, { AxiosResponse } from 'axios';
 import { addAvailability, deleteAvailability } from './availability';
+import { isValidEID } from '../id_manager';
 
 // create schema and model
 const employeeSchema: Schema = new Schema({
-    id: {type: Number, required: true},
-    name: {type: String, required: true},
+    eid: {type: String, required: true, unique: true},
+    firstName: {type: String, required: true},
+    lastName: {type: String, required: true},
     exceptions: {type: Object, required: true, default: {}}
 });
 const Employee = model('Employees', employeeSchema);
@@ -24,22 +25,27 @@ const getEmployees = async (req: Request, res: Response, next: NextFunction) => 
 
 // create a new employee
 const addEmployee = async (req: Request, res: Response, next: NextFunction) => {
-    let id: number = parseInt(req.body.id, 10);
-    let name: string = req.body.name ?? null;
+    let eid: string = req.body.eid;
+    let firstName: string = req.body.firstName ?? null;
+    let lastName: string = req.body.lastName ?? null;
 
-    // check that id is valid an that name is non-null
-    if (isNaN(id) || name === null) {
+    // check that eid is valid an that name is non-null
+    if (!isValidEID(eid) 
+        || firstName === null || firstName.trim().length == 0 
+        || lastName === null || lastName.trim().length == 0) {
         return res.status(400).json({
             message: 'Invalid request',
-            id: id,
-            name: name
+            eid: eid,
+            firstName: firstName,
+            lastName: lastName
         });
     }
 
     // create a new employee
     const employee = new Employee({
-        id: id,
-        name: name,
+        eid: eid,
+        firstName: firstName,
+        lastName: lastName,
         ...(req.body.exceptions && { exceptions: req.body.exceptions })
     });
 
@@ -47,10 +53,10 @@ const addEmployee = async (req: Request, res: Response, next: NextFunction) => {
     await employee.save();
 
     // request a new default_availability
-    let default_availability = await addAvailability(id);
+    let default_availability = await addAvailability(eid);
 
     // return response
-    return res.status(200).json({
+    return res.status(201).json({
         message: employee,
         default_availability: default_availability
     });
@@ -59,29 +65,49 @@ const addEmployee = async (req: Request, res: Response, next: NextFunction) => {
 // get a specific employee
 const getEmployee = async (req: Request, res: Response, next: NextFunction) => {
     // read employee id from request
-    let id: number = parseInt(req.params.id, 10);
+    let eid: string = req.params.eid;
     
+    // check if eid is valid
+    if (!isValidEID(eid)) {
+        return res.status(400).json({
+            message: 'Invalid request',
+            eid: eid
+        });
+    }
+
     // query mongodb
-    const employee = await Employee.findOne(
-        { id: id }
+    let employee = await Employee.findOne(
+        { eid: eid }
     );
+    
+    // check if employee exists
+    if (employee === null) {
+        return res.status(404).json({
+            message: 'Employee not found',
+            eid: eid
+        });
+    }
 
     // return response
     return res.status(200).json({
-        message: employee
+        message: "SUCCESS!",
+        firstName: employee.get('firstName') ?? "",
+        lastName: employee.get('lastName') ?? ""
     });
 }
 
 // update an existing employee
 const updateEmployee = async (req: Request, res: Response, next: NextFunction) => {
     // read employee id from request
-    let id: number = parseInt(req.params.id, 10);
+    let eid: string = req.params.eid;
     
     // query mongodb
     const employee = await Employee.findOneAndUpdate(
-        { id: id },
+        { eid: eid },
         {
-            ...(req.body.name && { name: req.body.name })
+            ...(req.body.firstName && { firstName: req.body.firstName }),
+            ...(req.body.lastName && { lastName: req.body.lastName }),
+            
         },
         { new: true }
     );
@@ -95,15 +121,15 @@ const updateEmployee = async (req: Request, res: Response, next: NextFunction) =
 // delete an existing employee
 const deleteEmployee = async (req: Request, res: Response, next: NextFunction) => {
     // read employee id from request
-    let id: number = parseInt(req.params.id, 10);
+    let eid: string = req.params.eid;
     
     // query mongodb
     const employee = await Employee.findOneAndDelete(
-        { id: id }
+        { eid: eid }
     );
 
     // delete employee's availability
-    let availability = await deleteAvailability(id);
+    let availability = await deleteAvailability(eid);
 
     // return response
     return res.status(200).json({

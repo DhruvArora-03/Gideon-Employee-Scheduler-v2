@@ -1,0 +1,19 @@
+mat-card {
+    width: 90%;
+    left: 5%;
+}
+
+mat-form-field {
+    margin-top: 1rem;
+    margin-left: 1%;
+    margin-right: 1%;
+    /* margin-bottom: -1.38em; */
+    display: block;
+}
+
+button {
+    margin-top: 1rem;
+    width: 20%;
+    left: 1%;
+    margin-bottom: 1rem;
+}

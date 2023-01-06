@@ -1,9 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { model, Schema } from 'mongoose';
+import { isValidEID } from '../id_manager';
 
 // create schema and model
 const availabilitySchema: Schema = new Schema({
-    id: {type: Number, required: true},
+    eid: {type: String, required: true, unique: true},
     monday: {type: Object, required: true, default: {start: "", end: ""}},
     tuesday: {type: Object, required: true, default: {start: "", end: ""}},
     wednesday: {type: Object, required: true, default: {start: "", end: ""}},
@@ -17,19 +18,19 @@ const Availability = model('Availabilities', availabilitySchema);
 // get specifc availability
 const getAvailability = async (req: Request, res: Response, next: NextFunction) => {
     // read employee id from request
-    let id: number = parseInt(req.params.id, 10);
+    let eid: string = req.params.eid;
 
-    // check that id is valid
-    if (isNaN(id)) {
+    // check that eid is valid
+    if (isValidEID(eid)) {
         return res.status(400).json({
             message: 'Invalid request',
-            id: id
+            eid: eid
         });
     }
 
     // query mongodb
     const availability = await Availability.findOne(
-        { id: id }
+        { eid: eid }
     );
 
     // return response
@@ -41,19 +42,19 @@ const getAvailability = async (req: Request, res: Response, next: NextFunction) 
 // update a specific availability
 const updateAvailability = async (req: Request, res: Response, next: NextFunction) => {
     // read employee id from request
-    let id: number = parseInt(req.params.id, 10);
+    let eid: string = req.params.eid;
 
-    // check that id is valid
-    if (isNaN(id)) {
+    // check that eid is valid
+    if (isValidEID(eid)) {
         return res.status(400).json({
-            message: 'Invalid request',
-            id: id
+            message: 'Invaleid request',
+            eid: eid
         });
     }
 
     // query mongodb
     const availability = await Availability.findOneAndUpdate(
-        { id: id },
+        { eid: eid },
         {
             ...(req.body.monday && { monday: req.body.monday }),
             ...(req.body.tuesday && { tuesday: req.body.tuesday }),
@@ -81,10 +82,10 @@ export default {
 // FOLLOWING IS ONLY FOR CREATING AND DELETING EMPLOYEES
 
 // create new availability
-const addAvailability = async (id: number) => {
+const addAvailability = async (eid: string) => {
     // create a new availability
     const availability = new Availability({
-        id: id
+        eid: eid
     });
 
     // save availability to mongodb
@@ -95,10 +96,10 @@ const addAvailability = async (id: number) => {
 }
 
 // delete a specific availability
-const deleteAvailability = async (id: Number) => {
+const deleteAvailability = async (eid: string) => {
     // query mongodb
     const availability = await Availability.findOneAndDelete(
-        { id: id }
+        { eid: eid }
     );
 
     // return response

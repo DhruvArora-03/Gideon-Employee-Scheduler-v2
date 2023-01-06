@@ -3,7 +3,7 @@ import controller from '../controllers/availability';
 
 const router = express.Router();
 
-router.get('/employee/availbility/:id', controller.getAvailability);
-router.put('/employee/availbility/:id', controller.updateAvailability);
+router.get('/employee/:eid/availbility', controller.getAvailability);
+router.put('/employee/:eid/availbility', controller.updateAvailability);
 
 export default router;

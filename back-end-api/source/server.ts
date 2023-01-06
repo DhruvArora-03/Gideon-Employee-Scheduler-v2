@@ -1,10 +1,10 @@
 import http from 'http'
 import express, { Express } from 'express'
 import morgan from 'morgan'
-import posts_routes from './routes/posts'
 import managers_routes from './routes/managers'
 import employees_routes from './routes/employees'
 import availability_routes from './routes/availability'
+import shifts_routes from './routes/shifts'
 import { connect, connection } from 'mongoose'
 
 const router: Express = express();
@@ -21,6 +21,12 @@ router.use(express.urlencoded({extended: false}));
 
 // parsing for json data
 router.use(express.json());
+
+// uhhhhh disable caching i think lol
+router.use((req, res, next) => {
+    res.set('Cache-Control', 'no-store')
+    next()
+})
 
 router.use((req, res, next) => {
     // set the CORS policy, * --> allow requests from any client
@@ -41,11 +47,18 @@ router.use((req, res, next) => {
     next();
 });
 
-// use the routes in routes/posts.ts
-router.use('/', posts_routes);
+// use the routes in routes
 router.use('/', managers_routes);
 router.use('/', employees_routes);
 router.use('/', availability_routes);
+router.use('/', shifts_routes);
+
+router.use('/test', (req, res, test) => {
+    res.status(200).json({
+        message: 'test successful!'
+    });
+});
+
 
 // error handling - if we get here, no route was found
 router.use((req, res, next) => {

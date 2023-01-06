@@ -1,0 +1,34 @@
+<h1>Current Availability:</h1>
+<div>
+    <table mat-table [dataSource]="availabilities">
+
+        <ng-container matColumnDef="day">
+            <th mat-header-cell *matHeaderCellDef>Day</th>
+            
+            <td mat-cell *matCellDef="let availability">{{availability.day}}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="earliest">
+            <th mat-header-cell *matHeaderCellDef>Earliest</th>
+            
+            <td mat-cell *matCellDef="let availability">{{availability.earliest}}</td>
+        </ng-container>
+        
+        <ng-container matColumnDef="latest">
+            <th mat-header-cell *matHeaderCellDef>Latest</th>
+            
+            <td mat-cell *matCellDef="let availability">
+                {{availability.latest}}
+                <span class="spacer"></span>
+                <button 
+                    mat-raised-button
+                    color="accent">
+                    Edit
+                </button>
+            </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="columnsToDisplay"></tr>
+        <tr mat-row *matRowDef="let rowData; columns: columnsToDisplay;"></tr>
+    </table>
+</div>
