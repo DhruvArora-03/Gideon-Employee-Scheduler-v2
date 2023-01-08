@@ -1,9 +1,7 @@
 import { Component, OnInit, OnDestroy } from "@angular/core";
+import { Router } from "@angular/router";
 
-import { Subscription } from "rxjs";
-
-import { EmployeesService } from "../employees/employees.service";
-import { Employee } from "../employees/employee.model";
+import { EmployeeService } from "../employee/employee.service";
 
 @Component({
     selector: 'app-header',
@@ -12,30 +10,22 @@ import { Employee } from "../employees/employee.model";
 })
 export class HeaderComponent implements OnInit, OnDestroy {
     name: string;
-    private employeeSub: Subscription;
 
-    constructor(private employeesService: EmployeesService) {
-        this.employeeSub = this.employeesService.login('da001').subscribe(
-            (employee: Employee) => {
-                this.name = employee.firstName + ' ' + employee.lastName;
-            }
-        )
+    constructor(private employeeService: EmployeeService, private router: Router) {
     }
-
+    
     ngOnInit() {
-        // this.name = 'test';
-        // this.employeeSub = this.employeesService.getLoggedInEmployeeUpdateListener().subscribe((employee: Employee) => {
-        //     this.name = employee.firstName + ' ' + employee.lastName;
-        //     if (this.name !== 'test') {
-        //         this.name = 'test';
-        //     }
-        // });
-
-        // this.employeesService.login('da001');
-
+        // if (!this.employeeService.loggedIn) {
+        //     this.router.navigate(['/login']);
+        // }
+        this.name = this.employeeService.getFullName();
     }
 
     ngOnDestroy() {
-        this.employeeSub.unsubscribe();
+        this.name = "";
+    }
+
+    tryLogout() {
+        this.employeeService.logout();
     }
 }

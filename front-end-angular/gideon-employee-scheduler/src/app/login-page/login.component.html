@@ -1,0 +1,43 @@
+<body>
+    <mat-card appearance = 'raised'>
+        <h1>Gideon Employee Scheduler</h1>
+
+        <form (submit)="tryLogin(postForm)" #postForm="ngForm">
+            <mat-form-field  appearance="outline">
+                <mat-label>Login Type</mat-label>
+                <mat-select 
+                    required
+                    [(ngModel)]="selection"
+                    #loginSelector="ngModel"
+                    name="login-selector">
+                    <mat-option>None</mat-option>
+                    <mat-option value="Employee">Employee Login</mat-option>
+                    <mat-option value="Manager">Manager Login</mat-option>
+                </mat-select>
+                <mat-error *ngIf="loginSelector.invalid">
+                    You must select one!
+                </mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" *ngIf="selection != null">
+                <mat-label>Enter {{selection}} ID</mat-label>
+                <input 
+                    matInput 
+                    placeholder="Enter your {{selection}} ID here!"
+                    type="text"
+                    name="eid"
+                    required
+                    ngModel
+                    #eid="ngModel">
+                <mat-error *ngIf="eid.invalid">
+                    An {{selection}} ID is required!
+                </mat-error>
+            </mat-form-field>
+            
+            <button 
+                mat-raised-button
+                color="accent"
+                type="submit">Log In</button>
+        </form>
+    </mat-card>
+</body>

@@ -6,7 +6,7 @@ import { isValidEID, isValidSID } from '../id_manager';
 const shiftSchema: Schema = new Schema({
     sid: {type: String, required: true, unique: true},
     start: {type: Date, required: true},
-    endTime: {type: String, required: true},
+    end: {type: Date, required: true},
     employees: {type: Array, required: true, default: []},
     employeesNeeded: {type: Number, required: true, default: -1}
 });
@@ -25,13 +25,14 @@ const getAllShifts = async (req: Request, res: Response, next: NextFunction) => 
 
 // get shifts for a specific employee
 const getShiftsForEmployee = async (req: Request, res: Response, next: NextFunction) => {
-    // query mongodb
-    const shifts = await Shift.find({});
+    // query mongodb for shifts that contain the employee id and are not in the past
+    const shifts = await Shift.find({
+        employees: req.params.eid,
+        end: {$gte: new Date()}
+    });
 
     // return response
-    return res.status(200).json({
-        message: shifts
-    });
+    return res.status(200).json(shifts);
 }
 
 // create a new shift
@@ -44,10 +45,27 @@ const createShift = async (req: Request, res: Response, next: NextFunction) => {
     const startDate: Date = new Date(date + ' ' + startTime);
     const endDate: Date = new Date(date + ' ' + endTime);
 
+    // check for valid sid
     if (!isValidSID(sid)) {
         return res.status(400).json({
             message: 'Invalid shift ID',
             sid: sid
+        });
+    }
+
+    // check for valid start
+    if (isNaN(startDate.getTime())) {
+        return res.status(400).json({
+            message: 'Invalid start',
+            startDate: startDate
+        });
+    }
+
+    // check for valid end
+    if (isNaN(endDate.getTime())) {
+        return res.status(400).json({
+            message: 'Invalid end',
+            endDate: endDate
         });
     }
 
@@ -123,14 +141,15 @@ const addEmployeeToShift = async (req: Request, res: Response, next: NextFunctio
         });
     }
 
-    // query mongodb
+    // query mongodb and push employee to shift only not already in shift
     const shift = await Shift.findOneAndUpdate(
-        {sid: sid},
+        {sid: sid, employees: {$ne: eid}},
         {
             $push: {employees: eid}
         },
         {new: true}
     );
+    
 
     // return response
     return res.status(200).json({
@@ -157,9 +176,9 @@ const removeEmployeeFromShift = async (req: Request, res: Response, next: NextFu
         });
     }
 
-    // query mongodb
+    // query mongodb and remove employee from shift only if employees array contains employee
     const shift = await Shift.findOneAndUpdate(
-        {sid: sid},
+        {sid: sid, employees: {$in: eid}},
         {
             $pull: {employees: eid}
         },

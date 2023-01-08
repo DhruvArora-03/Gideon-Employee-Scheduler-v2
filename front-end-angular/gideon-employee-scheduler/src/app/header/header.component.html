@@ -9,7 +9,13 @@
         Hello, {{name}}
     </span>
     
-    <!-- spacing for icons on right side-->
+    <!-- spacing to keep everything after this in the middle -->
+    <span class="spacer"></span>
+    
+    <!-- middle text -->
+    <h4>Employee View</h4>
+
+    <!-- spacing to keep everything after this on right side-->
     <span class="spacer"></span>
 
     <!-- settings button -->
@@ -18,7 +24,9 @@
     </button>
 
     <!-- logout button -->
-    <button mat-icon-button>
+    <button
+        mat-icon-button
+        (click)="tryLogout()">
         <mat-icon>logout</mat-icon>
     </button>
 </mat-toolbar>

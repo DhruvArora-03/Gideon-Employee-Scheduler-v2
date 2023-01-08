@@ -1,30 +1,49 @@
-<h1>Current Availability:</h1>
+<h2>Current Availability: {{temp}}</h2>
 <div>
     <table mat-table [dataSource]="availabilities">
+        <ng-container [matColumnDef]="col.key" *ngFor="let col of columnsSchema">
+            <th mat-header-cell *matHeaderCellDef>
+                {{col.label}}
+            </th>
+            <td mat-cell *matCellDef="let element">
+                <div [ngSwitch]="col.type" *ngIf="!element.isEdit">
+                    <div *ngSwitchCase="'isEdit'">
+                        <button
+                            mat-raised-button
+                            color="accent"
+                            (click)="element.isEdit = !element.isEdit">
+                            Edit
+                        </button>
+                    </div>
+                    <div *ngSwitchCase="'checkbox'">
+                        <mat-checkbox
+                            [checked]="element[col.key]"
+                            (change)="element[col.key] = !element[col.key]">
+                        </mat-checkbox>
+                    </div>
+                    <div *ngSwitchDefault>
+                        {{ element[col.key] }}
+                    </div>
+                </div>
 
-        <ng-container matColumnDef="day">
-            <th mat-header-cell *matHeaderCellDef>Day</th>
-            
-            <td mat-cell *matCellDef="let availability">{{availability.day}}</td>
-        </ng-container>
-
-        <ng-container matColumnDef="earliest">
-            <th mat-header-cell *matHeaderCellDef>Earliest</th>
-            
-            <td mat-cell *matCellDef="let availability">{{availability.earliest}}</td>
-        </ng-container>
-        
-        <ng-container matColumnDef="latest">
-            <th mat-header-cell *matHeaderCellDef>Latest</th>
-            
-            <td mat-cell *matCellDef="let availability">
-                {{availability.latest}}
-                <span class="spacer"></span>
-                <button 
-                    mat-raised-button
-                    color="accent">
-                    Edit
-                </button>
+                <div *ngIf="element.isEdit">
+                    <div class='btn-edit' *ngIf="col.key === 'isEdit'; else dataField">
+                        <button
+                            mat-raised-button
+                            color="accent"
+                            (click)="element.isEdit = !element.isEdit;">
+                            Done
+                        </button>
+                    </div>
+                    <ng-template #dataField>
+                        <mat-form-field>
+                            <input 
+                                [type]="col.type"
+                                matInput
+                                [(ngModel)]="element[col.key]">
+                        </mat-form-field>
+                    </ng-template>
+                </div>
             </td>
         </ng-container>
 

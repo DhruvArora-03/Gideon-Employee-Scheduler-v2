@@ -1,5 +1,7 @@
 export interface Shift {
-    date: string;
-    startTime: string;
-    endTime: string;
+    sid: string,
+    start: Date;
+    end: Date;
+    employees: string[];
+    employeesNeeded: number;
 }

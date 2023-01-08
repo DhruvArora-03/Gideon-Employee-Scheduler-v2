@@ -14,8 +14,13 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
+import { MatSelectModule } from '@angular/material/select';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 import { AppComponent } from './app.component';
+import { LoginComponent } from './login-page/login.component';
+import { HomeComponent } from './home-page/home.component';
+
 import { PostCreateComponent } from './posts/post-create/post-create.component';
 import { HeaderComponent } from './header/header.component';
 import { PostListComponent } from './posts/post-list/post-list.component';
@@ -26,6 +31,9 @@ import { AvailabilityDisplayComponent } from './availability-display/availabilit
 @NgModule({
   declarations: [
     AppComponent,
+    LoginComponent,
+    HomeComponent,
+
     PostCreateComponent,
     HeaderComponent,
     PostListComponent,
@@ -47,7 +55,9 @@ import { AvailabilityDisplayComponent } from './availability-display/availabilit
     MatToolbarModule,
     MatExpansionModule,
     MatIconModule,
-    MatTableModule
+    MatTableModule,
+    MatSelectModule,
+    MatCheckboxModule
   ],
   providers: [],
   bootstrap: [AppComponent]

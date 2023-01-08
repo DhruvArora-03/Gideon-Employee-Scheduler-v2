@@ -1,49 +1,60 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { Router } from '@angular/router'
 
-import { Subject, Observable, throwError } from 'rxjs';
+import { Observable, throwError, take } from 'rxjs';
 import { catchError, retry } from 'rxjs/operators';
 
 import { Employee } from './employee.model';
 
 @Injectable({providedIn: 'root'})
-export class EmployeesService {
+export class EmployeeService {
     private loggedInEmployee: Employee;
-    private loggedInEmployeeUpdated = new Subject<Employee>();
+    loggedIn: boolean;
     private apiUrl = 'http://localhost:6060/';
-    private boolTest: boolean = false;
-    constructor(private http: HttpClient) {}
-
-    getLoggedInEmployeeUpdateListener() {
-        return this.loggedInEmployeeUpdated.asObservable();
+    
+    constructor(private http: HttpClient, private router: Router) {
+        this.loggedIn=false;
     }
 
     getEID() {
+        if (!this.loggedIn) {
+            return "";
+        }
+
         return this.loggedInEmployee.eid;
     }
 
     getFullName() {
+        this.loggedInEmployee = {
+            eid: "da001",
+            firstName: "Dhruv",
+            lastName: "Arora",
+        }
+        this.loggedIn = true;
+        if (!this.loggedIn) {
+            return "";
+        }
         return this.loggedInEmployee.firstName + ' ' + this.loggedInEmployee.lastName;
     }
 
-    getTest() {
-        return this.http.get(this.apiUrl + 'test');
+    login(eid: string) {
+        this.http.get<Employee>(this.apiUrl + 'employee/' + eid).pipe(
+            retry(3),
+            catchError(this.handleError),
+            take(1)
+        ).subscribe((employee: Employee) => {
+            this.loggedInEmployee = employee;
+            if (employee.eid === eid) {
+                this.loggedIn=true;
+                this.router.navigate(['/home']);
+            }
+        });
     }
 
-    login(eid: string) {
-        let apiResult: Observable<Employee> = this.http.get<Employee>(this.apiUrl + 'employee/' + eid);
-        apiResult.subscribe((employee: Employee) => {
-            this.loggedInEmployee.eid = employee.eid;
-            this.loggedInEmployee.firstName = employee.firstName;
-            this.loggedInEmployee.lastName = employee.lastName;
-            this.loggedInEmployeeUpdated.next(employee);
-        }).unsubscribe();
-        if (!this.boolTest) {
-            this.boolTest = true;
-            this.login(eid);
-        }
-
-        return apiResult;
+    logout() {
+        this.loggedIn=false;
+        this.router.navigate(['/login']);
     }
 
     private handleError(error: HttpErrorResponse) {

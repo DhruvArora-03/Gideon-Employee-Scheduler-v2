@@ -25,7 +25,7 @@ const getEmployees = async (req: Request, res: Response, next: NextFunction) => 
 
 // create a new employee
 const addEmployee = async (req: Request, res: Response, next: NextFunction) => {
-    let eid: string = req.body.eid;
+    let eid: string = req.body.eid ?? null;
     let firstName: string = req.body.firstName ?? null;
     let lastName: string = req.body.lastName ?? null;
 
@@ -79,7 +79,7 @@ const getEmployee = async (req: Request, res: Response, next: NextFunction) => {
     let employee = await Employee.findOne(
         { eid: eid }
     );
-    
+
     // check if employee exists
     if (employee === null) {
         return res.status(404).json({
@@ -91,6 +91,7 @@ const getEmployee = async (req: Request, res: Response, next: NextFunction) => {
     // return response
     return res.status(200).json({
         message: "SUCCESS!",
+        eid: employee.get('eid') ?? "",
         firstName: employee.get('firstName') ?? "",
         lastName: employee.get('lastName') ?? ""
     });

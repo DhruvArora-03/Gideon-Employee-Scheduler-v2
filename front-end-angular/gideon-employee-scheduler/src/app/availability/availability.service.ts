@@ -5,16 +5,24 @@ import { throwError, take } from 'rxjs';
 import { catchError, retry } from 'rxjs/operators';
 
 import { EmployeeService } from '../employee/employee.service';
-import { Shift } from './shift.model';
+import { AvailabilityData } from './availability.model';
 
 @Injectable({providedIn: 'root'})
-export class ShiftsService {
+export class AvailabilityService {
     private apiUrl = 'http://localhost:6060/';
     
     constructor(private http: HttpClient, private employeeService: EmployeeService) {}
 
-    getShifts(eid: string) {
-        return this.http.get<Shift[]>(this.apiUrl + 'shifts/' + eid).pipe(
+    getAvailabilities(eid: string) {
+        return this.http.get<AvailabilityData[]>(this.apiUrl + 'employee/' + eid + '/availability').pipe(
+            retry(3),
+            catchError(this.handleError),
+            take(1)
+        );
+    }
+
+    updateAvailability(eid: string, availability: AvailabilityData) {
+        return this.http.put(this.apiUrl + 'employee/' + eid + '/availability', availability).pipe(
             retry(3),
             catchError(this.handleError),
             take(1)

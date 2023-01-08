@@ -5,13 +5,15 @@ import { isValidEID } from '../id_manager';
 // create schema and model
 const availabilitySchema: Schema = new Schema({
     eid: {type: String, required: true, unique: true},
-    monday: {type: Object, required: true, default: {start: "", end: ""}},
-    tuesday: {type: Object, required: true, default: {start: "", end: ""}},
-    wednesday: {type: Object, required: true, default: {start: "", end: ""}},
-    thursday: {type: Object, required: true, default: {start: "", end: ""}},
-    friday: {type: Object, required: true, default: {start: "", end: ""}},
-    saturday: {type: Object, required: true, default: {start: "", end: ""}},
-    sunday: {type: Object, required: true, default: {start: "", end: ""}}
+    data: {type: Object, required: true, default: [
+        {day: "Monday", available: false, earliest: "", latest: ""},
+        {day: "Tuesday", available: false, earliest: "", latest: ""},
+        {day: "Wednesday", available: false, earliest: "", latest: ""},
+        {day: "Thursday", available: false, earliest: "", latest: ""},
+        {day: "Friday", available: false, earliest: "", latest: ""},
+        {day: "Saturday", available: false, earliest: "", latest: ""},
+        {day: "Sunday", available: false, earliest: "", latest: ""}
+    ]}
 });
 const Availability = model('Availabilities', availabilitySchema);
 
@@ -21,7 +23,7 @@ const getAvailability = async (req: Request, res: Response, next: NextFunction) 
     let eid: string = req.params.eid;
 
     // check that eid is valid
-    if (isValidEID(eid)) {
+    if (!isValidEID(eid)) {
         return res.status(400).json({
             message: 'Invalid request',
             eid: eid
@@ -33,10 +35,16 @@ const getAvailability = async (req: Request, res: Response, next: NextFunction) 
         { eid: eid }
     );
 
+    // if availability is null, return 404
+    if (availability === null) {
+        return res.status(404).json({
+            message: 'Availability not found',
+            eid: eid
+        });
+    }
+
     // return response
-    return res.status(200).json({
-        message: availability
-    });
+    return res.status(200).json(availability.get('data'));
 }
 
 // update a specific availability
@@ -45,24 +53,18 @@ const updateAvailability = async (req: Request, res: Response, next: NextFunctio
     let eid: string = req.params.eid;
 
     // check that eid is valid
-    if (isValidEID(eid)) {
+    if (!isValidEID(eid)) {
         return res.status(400).json({
-            message: 'Invaleid request',
+            message: 'Invalid request',
             eid: eid
         });
     }
 
-    // query mongodb
+    // query mongodb and replace availability with eid of eid and in data, replace the day with the day in the request
     const availability = await Availability.findOneAndUpdate(
         { eid: eid },
         {
-            ...(req.body.monday && { monday: req.body.monday }),
-            ...(req.body.tuesday && { tuesday: req.body.tuesday }),
-            ...(req.body.wednesday && { wednesday: req.body.wednesday }),
-            ...(req.body.thursday && { thursday: req.body.thursday }),
-            ...(req.body.friday && { friday: req.body.friday }),
-            ...(req.body.saturday && { saturday: req.body.saturday }),
-            ...(req.body.sunday && { sunday: req.body.sunday })
+            ...(req.body.data && { data: req.body.data })
         },
         { new: true }
     );
